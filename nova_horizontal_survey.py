@@ -6,50 +6,76 @@ import plotly.graph_objects as go
 # 1. 页面配置
 st.set_page_config(page_title="AI 进阶路径诊断", page_icon="🌿", layout="wide")
 
-# 自定义视觉样式
+# 自定义视觉样式：强制修正字体颜色为深色
 st.markdown("""
     <style>
-    .stApp { background-color: #F0F9F0; }
+    /* 强制全局背景为清新绿 */
+    .stApp { background-color: #F0F9F0 !important; }
+    
+    /* 强制所有文字颜色为深绿/深灰，确保清晰度 */
+    html, body, [class*="st-"] {
+        color: #155724 !important; /* 深森林绿 */
+        font-family: 'Segoe UI', 'Roboto', sans-serif;
+    }
+
+    /* 针对问卷卡片的特殊处理 */
     [data-testid="stForm"] { 
-        background-color: rgba(255,255,255,0.95); 
+        background-color: rgba(255, 255, 255, 0.95) !important; 
         border-radius: 15px; 
         padding: 25px;
         border: 1px solid #C3E6CB;
     }
+
+    /* 单选框的选项文字颜色 */
+    div[data-testid="stRadio"] label {
+        color: #2c3e50 !important;
+        font-weight: 500 !important;
+    }
+
+    /* 标题颜色 */
+    h1, h2, h3, h4, h5, h6 {
+        color: #155724 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 右侧视觉卡片 */
     .visual-card {
-        background: white; border-radius: 15px; padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
+        background: white !important; 
+        border-radius: 15px; 
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        text-align: center;
     }
     .lobster-icon { font-size: 80px; margin: 0; }
-    .matrix-label { font-size: 14px; font-weight: bold; color: #155724; }
+    .matrix-label { font-size: 14px; font-weight: bold; color: #155724 !important; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🌿 春启新程 · AI 进阶盛宴诊断")
-st.markdown("**尊敬的决策者：** AI 已经从小龙虾的灵动，进化到了帝王蟹的稳重。请勾勒您的进化路径。")
+st.markdown("##### 尊敬的决策者：从敏捷的小龙虾到殿堂级的帝王蟹，请勾勒您的进化路径。")
 
 # 2. 左右布局
 left_col, right_col = st.columns([6, 4])
 
 with left_col:
     with st.form("survey_form"):
-        st.subheader("第一部分：安全与主权")
+        st.markdown("### 第一部分：安全与主权")
         q1 = st.radio("1. 您的团队使用公有云 AI 的态度是？", 
                      ["A. 效率优先：鼓励使用", "B. 稳健为主：担忧但未禁止", "C. 主权至上：严令禁止，须完全受控"])
         q2 = st.radio("2. 核心业务数据（如财务/设计）的访问要求？", 
                      ["A. 结果导向：不限位置", "B. 信任大厂：须在微软云端运行", "C. 绝对私有：必须本地或隔离环境"])
 
-        st.subheader("第二部分：业务复杂度")
+        st.markdown("### 第二部分：业务复杂度")
         q3 = st.radio("3. AI 解决的核心问题？", 
                      ["A. 个人琐事：发帖/查资料", "B. 组织协同：会议/文档", "C. 深度逻辑：私有API/业务指令"])
         q4 = st.radio("4. 您的个性化追求？", 
-                     ["A. 好玩好折腾：开源模型", "B. 学习成本低：统一界面", "C. 深度定制：私有数字员工"])
+                     ["A. 好玩好折腾：开源模型", "B. 统一标准：学习成本低", "C. 深度定制：私有数字员工"])
 
-        st.subheader("第三部分：预算规划")
+        st.markdown("### 第三部分：预算规划")
         q5 = st.radio("5. 您的 AI 订阅预算规划？", 
                      ["A. 极低成本/按需付费", "B. 长期基建/接受年费", "C. 价值导向/愿意为数据主权溢价"])
 
-        submit = st.form_submit_button("生成诊断报告")
+        submit = st.form_submit_button("🌱 生成我的春日诊断报告")
 
 with right_col:
     # 实时匹配逻辑
@@ -71,9 +97,17 @@ with right_col:
         fig = go.Figure(data=go.Scatterpolar(
             r=[res["A"], res["B"], res["C"]],
             theta=['敏捷(A)', '协同(B)', '主权(C)'],
-            fill='toself', line_color='#28a745'
+            fill='toself', line_color='#28a745',
+            marker=dict(color='#155724')
         ))
-        fig.update_layout(height=300, polar=dict(radialaxis=dict(visible=True, range=[0, 5])), margin=dict(l=40,r=40,t=40,b=40))
+        fig.update_layout(
+            height=300, 
+            polar=dict(radialaxis=dict(visible=True, range=[0, 5], tickfont=dict(color="#155724")),
+                       angularaxis=dict(tickfont=dict(color="#155724"))),
+            margin=dict(l=40,r=40,t=40,b=40),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig, use_container_width=True)
 
         # 矩阵小图标
@@ -85,4 +119,4 @@ with right_col:
         if res["C"] >= 3:
             st.success("🌸 系统已锁定您的 Nova Claw 共创名额")
     else:
-        st.info("💡 调研实时生成中...")
+        st.markdown('<p style="color:#155724; text-align:center;">💡 请填写左侧问卷，查看您的进化图谱</p>', unsafe_allow_html=True)
