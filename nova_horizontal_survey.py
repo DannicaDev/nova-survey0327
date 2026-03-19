@@ -239,7 +239,6 @@ with t_group:
             
             with qr_col1:
                 st.markdown("扫码加入 NovaClaw 创始计划")
-                st.write("欢迎扫描二维码，获取本次分享会深度白皮书及共创名额申请表。")
                 
                 # 【关键】把下面的链接换成你真正的调研表或官网链接
                 qr_img = generate_qr("https://your-actual-link.com") 
