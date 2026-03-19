@@ -159,24 +159,26 @@ with t_group:
                            color_discrete_sequence=['#C62828', '#EF6C00', '#1565C0'], hole=0.5)
             fig_pie.update_traces(textinfo='percent+label', textfont_size=20)
             st.plotly_chart(fig_pie, use_container_width=True)
+            
         with gr:
-            with gr:
+            # 这里的缩进必须严格保持一致
             st.markdown("### 🏛️ 现场全景趋势分析")
             if st.button("🛰️ 启动全场 AI 进化扫描"):
-                # 终极深度 Prompt
+                # 终极深度群体分析 Prompt
                 gp = (
-                    f"现场数据：A:{c['A']}人，B:{c['B']}人，C:{c['C']}人。总样本{total}。 "
-                    "请作为首席数字化战略官提供深度报告。必须包含以下三个板块：\n"
+                    f"现场数据：敏捷(A):{c['A']}, 协同(B):{c['B']}, 主权(C):{c['C']}。 "
+                    "请作为首席数字化战略官提供深度长篇报告。必须包含以下三个板块：\n"
                     "【现状透视】：分析为何现场管理者普遍处于‘效率与主权’的权衡期，解读数据背后隐藏的群体焦虑。\n"
-                    "【深度逻辑】：剖析从 OpenClaw 迈向 NovaClaw 的本质是‘业务资产化’，解释主权意识（C型）为何是未来三年的胜负手。\n"
-                    "【行动指南】：针对当前数据比例，预测未来12个月的算力投入重心。提及 Mac Mini 作为边缘主权算力的战略地位。\n"
-                    "要求字数充实，观点犀利且富有启发性。"
+                    "【深度逻辑】：剖析从 OpenClaw 迈向 NovaClaw 的本质是‘业务资产化’。\n"
+                    "【行动指南】：预测未来12个月的算力投入重心。提及 Mac Mini 作为边缘主权算力的战略地位。\n"
+                    "要求字数充实，观点犀利。"
                 )
-                with st.spinner("正在融合全场数据，生成战略白皮书..."):
-                    grand_insight = get_pro_insight(gp, "全场数据正在解析中...")
+                with st.spinner("正在对全场数据进行多维建模分析..."):
+                    grand_insight = get_pro_insight(gp, "全场数据表明，主权意识正在成为核心诉求。")
                     st.markdown(f"""
-                        <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; border-top: 5px solid #1B5E20; margin-top:10px; line-height: 1.9; white-space: pre-wrap;">
+                        <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; border-top: 5px solid #1B5E20; 
+                                    line-height: 1.9; white-space: pre-wrap; font-size: 16px;">
                             {grand_insight}
                         </div>
                     """, unsafe_allow_html=True)
-            st.success("现场演示 Tip：若主权型(C)占比较高，暗示现场观众更倾向于私有化 Agent 部署。")
+            st.info("🎁 提示：现场将随机抽取 **Mac Mini**，其本地算力正是实现‘主权级 AI’的物理基石。")
