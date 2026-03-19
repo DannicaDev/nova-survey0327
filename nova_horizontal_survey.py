@@ -1,10 +1,30 @@
 import streamlit as st
+import qrcode
+from io import BytesIO
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import requests
-import qrcode
-from io import BytesIO
+
+# --- 全局工具函数 ---
+def generate_qr(url):
+    qr = qrcode.QRCode(
+        version=1, 
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10, 
+        border=4
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    
+    # 森林绿二维码
+    img = qr.make_image(fill_color="#1B5E20", back_color="white") 
+    
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+# --- 这里开始才是你的 st.set_page_config 和其他主逻辑 ---
 
 # --- 1. 页面配置与高级感 CSS ---
 st.set_page_config(page_title="AI 进阶路径诊断", layout="wide")
@@ -60,16 +80,6 @@ def get_pro_insight(prompt, fallback):
         return r.json()['choices'][0]['message']['content']
     except:
         return fallback
-    
-    def generate_qr(url):
-        qr = qrcode.QRCode(version=1, box_size=10, border=4)
-        qr.add_data(url)
-        qr.make(fit=True)
-        # 使用你一直用的主题绿 #1B5E20
-        img = qr.make_image(fill_color="#1B5E20", back_color="white") 
-        buf = BytesIO()
-        img.save(buf, format="PNG")
-        return buf.getvalue()
 
 # --- 4. 主界面布局 ---
 st.title("🌿 小龙虾时代 · 企业 AI 进阶诊断")
