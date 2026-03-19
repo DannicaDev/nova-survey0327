@@ -9,26 +9,28 @@ st.set_page_config(page_title="AI 进阶路径诊断", layout="wide")
 
 st.markdown("""
     <style>
+    /* 基础背景 */
     .stApp { background-color: #F8FAF8 !important; }
-    /* 放大 Tab 标签 */
-    button[data-baseweb="tab"] { font-size: 26px !important; font-weight: 700 !important; color: #1B5E20 !important; }
+
+    /* 放大 Tab 标签并增加点击感 */
+    button[data-baseweb="tab"] { 
+        font-size: 26px !important; 
+        font-weight: 700 !important; 
+        color: #1B5E20 !important; 
+    }
+
+    /* 优化 Tab 容器样式 (注意这里的逗号必须是英文半角) */
+    div[data-testid="stHorizontalBlock"] > div:has(button[data-baseweb="tab"]) {
+        background-color: #E8F5E9 !important;
+        border-radius: 50px !important;
+        padding: 5px 20px !important;
+        margin-bottom: 20px !important;
+    }
+    
     /* 问卷文字字号 */
-    .stRadio label { font-size: 19px !important; font-weight: 500 !important; color: #2C3E50 !important; }
-    /* 结果卡片 */
-    .res-card { background: white; border-radius: 20px; padding: 30px; border: 2px solid #E0E0E0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .big-icon { font-size: 100px; margin-bottom: 10px; }
-    /* 洞见卡片 */
-    .insight-box { background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%); border-left: 8px solid #4CAF50; padding: 25px; border-radius: 12px; font-size: 18px; line-height: 1.6; color: #1B5E20; margin-top: 20px; }
+    .stRadio label { font-size: 19px !important; font-weight: 500 !important; }
     </style>
     """, unsafe_allow_html=True)
-
-/* 优化 Tab 样式，使其更具点击感 */
-div[data-testid="stHorizontalBlock"] > div:has(button[data-baseweb="tab"]) {
-    background: #E8F5E9;
-    border-radius: 50px;
-    padding: 5px;
-    margin-bottom: 20px;
-}
 
 # --- 2. 数据初始化 (Session State) ---
 if 'counts' not in st.session_state:
