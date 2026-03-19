@@ -89,6 +89,7 @@ with t_personal:
         ans = [v1, v2, v3, v4, v5, v6, v7, v8]
         c_val = sum(1 for x in ans if "C." in x)
         
+        # 判定逻辑
         if c_val >= 5:
             icon, name, color = "🦀", "殿堂·帝王蟹 (ME7)", "#1565C0"
         elif c_val >= 2:
@@ -96,51 +97,50 @@ with t_personal:
         else:
             icon, name, color = "🦐", "敏捷·小龙虾 (OpenClaw)", "#C62828"
 
+        # --- 第一层：结果与能量图并排（横向压缩空间） ---
         st.markdown(f"""
-            <div class="res-card" style="border-top: 10px solid {color};">
-                <div class="big-icon">{icon}</div>
-                <h2 style="color:{color}; margin:0;">{name}</h2>
+            <div style="background:white; border-radius:15px; padding:15px; border:1px solid #E0E0E0; margin-bottom:15px; display: flex; align-items: center; justify-content: space-around;">
+                <div style="text-align:center;">
+                    <div style="font-size: 55px;">{icon}</div>
+                    <div style="color:{color}; font-weight:bold; font-size:16px;">{name}</div>
+                </div>
+                <div style="width: 2px; height: 60px; background-color: #EEE;"></div>
+                <div style="flex-grow: 1; margin-left: 20px;">
+                    <p style="font-size:12px; color:#666; margin:0 0 5px 0;">进化维度能量分布</p>
+                </div>
             </div>
         """, unsafe_allow_html=True)
+        
+        # 在并排卡片中嵌入能量图
+        # 这里通过 style 往回找位置，或者直接用下面的渲染方式：
+        s = {"敏捷": sum(1 for x in ans if "A." in x), "协同": sum(1 for x in ans if "B." in x), "主权": c_val}
+        fig = go.Figure(go.Bar(
+            x=[s["敏捷"], s["协同"], s["主权"]],
+            y=["Agile", "Collab", "Sovereign"],
+            orientation='h', marker_color=color, text=[s["敏捷"], s["协同"], s["主权"]], textposition='inside'
+        ))
+        fig.update_layout(height=120, margin=dict(l=0,r=10,t=0,b=0), xaxis=dict(visible=False), yaxis=dict(autorange="reversed"), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         if submit:
-            # 更新 Session 状态
             key = "C" if c_val >= 5 else ("B" if c_val >= 2 else "A")
             st.session_state.counts[key] += 1
-            st.session_state.saved_scores = {
-                "敏捷": sum(1 for x in ans if "A." in x),
-                "协同": sum(1 for x in ans if "B." in x),
-                "主权": c_val
-            }
-            # AI 深度长文案
-            p = f"诊断结果为{name}。请给出深度分析，特别是针对{v3}和{v8}的情况，分点陈述建议。"
-            f = f"【专家深度诊断报告】\n\n您的企业属于**{name}**级别，这表明您在数字化转型中极度重视资产的自持与安全。\n\n**建议落地路径：**\n1. **主权隔离**：针对{v3}，建议优先部署本地化算力中心，实现核心数据物理不出场。\n2. **定制化 Agent**：利用 NovaClaw 框架封装高频业务逻辑。\n3. **长期基建**：将 AI 视为企业无形资产，而不只是提效工具。"
-            with st.spinner("AI 首席顾问正在撰写长篇诊断报告..."):
-                st.session_state.saved_insight = get_pro_insight(p, f)
+            # 强化 Prompt
+            p = f"诊断结果为{name}。请提供一份深刻的【首席顾问深度 Insight】，包含：1. 现状评估；2. 针对数据主权的落地建议；3. 长期数字化基建愿景。要求总字数约400字，分段清晰。"
+            with st.spinner("AI 正在深度建模中..."):
+                st.session_state.saved_insight = get_pro_insight(p, "正在为您规划{name}级别的进化路径...")
             st.balloons()
 
-        # --- 能量图 (保留并美化) ---
-        if sum(st.session_state.saved_scores.values()) > 0:
-            st.markdown("#### ⚡ 进阶维度能量分布")
-            s = st.session_state.saved_scores
-            fig = go.Figure(go.Bar(
-                x=[s["敏捷"], s["协同"], s["主权"]],
-                y=["Agile", "Collab", "Sovereign"],
-                orientation='h', marker_color=color,
-                text=[s["敏捷"], s["协同"], s["主权"]], textposition='auto'
-            ))
-            fig.update_layout(height=180, margin=dict(l=0,r=20,t=0,b=0), xaxis=dict(range=[0,8], visible=False), yaxis=dict(autorange="reversed"), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
-        # --- 长版本专家洞见渲染 ---
+        # --- 第二层：内嵌滚动条的 Insight 区域 ---
         if st.session_state.saved_insight:
             st.markdown(f"""
-                <div class="insight-box">
-                    <strong>🏛️ 首席顾问深度 Insight：</strong><br><br>
-                    {st.session_state.saved_insight}
+                <div style="background: #E8F5E9; border-left: 6px solid #4CAF50; border-radius: 10px; padding: 20px; 
+                            max-height: 480px; overflow-y: auto; color: #1B5E20;">
+                    <h4 style="margin:0 0 15px 0;">🏛️ 首席顾问深度 Insight</h4>
+                    <div style="line-height: 1.8; font-size: 16px; white-space: pre-wrap;">{st.session_state.saved_insight}</div>
                 </div>
             """, unsafe_allow_html=True)
-
+        
 with t_group:
     st.header("📊 现场实时洞察看板")
     c = st.session_state.counts
@@ -160,18 +160,23 @@ with t_group:
             fig_pie.update_traces(textinfo='percent+label', textfont_size=20)
             st.plotly_chart(fig_pie, use_container_width=True)
         with gr:
-            st.markdown("### 🏛️ 现场全景解析")
-            if st.button("🛰️ 扫描现场 AI 进化趋势"):
-                # 强化版群体分析 Prompt
+            with gr:
+            st.markdown("### 🏛️ 现场全景趋势分析")
+            if st.button("🛰️ 启动全场 AI 进化扫描"):
+                # 终极深度 Prompt
                 gp = (
-                    f"现场数据汇总：敏捷型(A):{c['A']}人，协同型(B):{c['B']}人，主权型(C):{c['C']}人。总计{total}位决策者。 "
-                    "请作为首席AI战略顾问，给出一段极具煽动性且深刻的现场趋势分析。要求：\n"
-                    "1. 分析当前群体表现出的‘管理焦虑’与‘技术渴望’之间的矛盾；\n"
-                    "2. 针对主权意识的觉醒（C型）给出独家见解；\n"
-                    "3. 预测未来12个月内，现场企业在 NovaClaw 这种私有化 Agent 上的潜在投入方向。\n"
-                    "排版请使用：【现状透视】、【深度逻辑】、【行动指南】三个版块。"
+                    f"现场数据：A:{c['A']}人，B:{c['B']}人，C:{c['C']}人。总样本{total}。 "
+                    "请作为首席数字化战略官提供深度报告。必须包含以下三个板块：\n"
+                    "【现状透视】：分析为何现场管理者普遍处于‘效率与主权’的权衡期，解读数据背后隐藏的群体焦虑。\n"
+                    "【深度逻辑】：剖析从 OpenClaw 迈向 NovaClaw 的本质是‘业务资产化’，解释主权意识（C型）为何是未来三年的胜负手。\n"
+                    "【行动指南】：针对当前数据比例，预测未来12个月的算力投入重心。提及 Mac Mini 作为边缘主权算力的战略地位。\n"
+                    "要求字数充实，观点犀利且富有启发性。"
                 )
-                with st.spinner("正在对全场数据进行多维建模分析..."):
-                    grand_insight = get_pro_insight(gp, "全场数据表明，主权意识正在成为管理层的核心诉求。建议关注本地算力与 NovaClaw 的结合。")
-                    st.markdown(f'<div class="insight-box">{grand_insight}</div>', unsafe_allow_html=True)
-            st.info("🎁 提示：现场将随机抽取 **Mac Mini**，其本地算力正是实现‘主权级 AI’的物理基石。")
+                with st.spinner("正在融合全场数据，生成战略白皮书..."):
+                    grand_insight = get_pro_insight(gp, "全场数据正在解析中...")
+                    st.markdown(f"""
+                        <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; border-top: 5px solid #1B5E20; margin-top:10px; line-height: 1.9; white-space: pre-wrap;">
+                            {grand_insight}
+                        </div>
+                    """, unsafe_allow_html=True)
+            st.success("现场演示 Tip：若主权型(C)占比较高，暗示现场观众更倾向于私有化 Agent 部署。")
