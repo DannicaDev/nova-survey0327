@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import requests
+import qrcode
+from io import BytesIO
 
 # --- 1. 页面配置与高级感 CSS ---
 st.set_page_config(page_title="AI 进阶路径诊断", layout="wide")
@@ -41,6 +43,17 @@ if 'saved_scores' not in st.session_state:
 
 # --- 3. 深度 AI 调用函数 ---
 def get_pro_insight(prompt, fallback):
+    
+    def generate_qr(url):
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(url)
+    qr.make(fit=True)
+    # 使用你一直用的主题绿 #1B5E20
+    img = qr.make_image(fill_color="#1B5E20", back_color="white") 
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+    
     api_key = st.secrets.get("MINIMAX_API_KEY")
     if not api_key: return fallback
     url = "https://api.minimax.chat/v1/text/chatcompletion_v2"
@@ -210,3 +223,19 @@ with t_group:
             # 底部 Tip 也微调一下间距
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
             st.info("🎁 提示：现场将随机抽取 **Mac Mini**，其本地算力正是实现‘主权级 AI’的物理基石。")
+            
+            # --- 现场扫码互动区 ---
+            st.markdown("<br><hr>", unsafe_allow_html=True) # 画一条分割线
+            qr_col1, qr_col2 = st.columns([1, 1])
+            
+            with qr_col1:
+                st.markdown("### 📱 扫码加入 NovaClaw 创始计划")
+                st.write("欢迎扫描二维码，获取本次分享会深度白皮书及共创名额申请表。")
+                
+                # 【关键】把下面的链接换成你真正的调研表或官网链接
+                qr_img = generate_qr("https://your-actual-link.com") 
+                st.image(qr_img, width=220, caption="扫码开启 AI 主权进化")
+                
+            with qr_col2:
+                st.markdown("<br><br>", unsafe_allow_html=True)
+                st.success("✨ **创始会员权益**：\n\n1. 优先获得 NovaClaw 私有化部署支持；\n2. 获赠专属算力优化包；\n3. 深度参与产品功能定义。")
