@@ -241,7 +241,7 @@ with t_group:
                 st.markdown("扫码加入 NovaClaw 创始计划")
                 
                 # 【关键】把下面的链接换成你真正的调研表或官网链接
-                qr_img = generate_qr("https://nova-survey0327-clawevent.streamlit.app/") 
+                qr_img = generate_qr("https://forms.cloud.microsoft/r/mh1XeRNkk5") 
                 st.image(qr_img, width=220, caption="扫码开启 AI 主权进化")
                 
             with qr_col2:
