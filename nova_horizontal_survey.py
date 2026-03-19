@@ -194,7 +194,6 @@ with t_group:
                         <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; 
                                 border-top: 5px solid #1B5E20; color: #1B5E20;
                                 line-height: 1.55; font-size: 15px; white-space: pre-wrap; letter-spacing: 0.5px;">
-                            <div style="margin-bottom: 10px;"></div>
                             {grand_insight}
                         </div>
                     """, unsafe_allow_html=True)
