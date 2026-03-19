@@ -32,29 +32,54 @@ if 'my_scores' not in st.session_state:
 
 # --- 3. 核心 API 调用函数 (带诊断逻辑) ---
 def get_ai_content(prompt, fallback):
-    # 优先检查 Secrets
+    # 1. 检查 Secrets 是否存在
     api_key = st.secrets.get("MINIMAX_API_KEY")
     group_id = st.secrets.get("MINIMAX_GROUP_ID")
     
-    if not api_key:
-        return f"💡 **[专家预设洞察]**\n\n{fallback}"
+    if not api_key or api_key == "你的KEY":
+        return f"❌ **配置错误**：未在 Streamlit Secrets 中检测到有效的 API Key。\n\n{fallback}"
 
     url = f"https://api.minimax.chat/v1/text/chatcompletion_pro?GroupId={group_id}"
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # 标准 MiniMax v2 结构
     payload = {
         "model": "abab6.5-chat",
+        "tokens_to_generate": 512,
+        "reply_constraints": {"sender_type": "BOT", "sender_name": "AI专家"},
         "messages": [{"sender_type": "USER", "sender_name": "访客", "text": prompt}],
-        "bot_setting": [{"region": "China", "content": "你是一位专业的AI战略顾问。"}]
+        "bot_setting": [{"region": "China", "content": "你是一位专业的AI战略顾问，语气干练。"}]
     }
+
     try:
-        r = requests.post(url, headers=headers, json=payload, timeout=10)
-        # 兼容不同版本的返回格式
-        data = r.json()
-        if 'reply' in data: return data['reply']
-        if 'choices' in data: return data['choices'][0]['text']
-        return fallback
-    except:
-        return fallback
+        r = requests.post(url, headers=headers, json=payload, timeout=12)
+        
+        # 如果返回了错误状态码（如 401 说明 Key 错了）
+        if r.status_code != 200:
+            return f"⚠️ **API 报错 (状态码 {r.status_code})**：请检查 Key 是否有效。\n\n{fallback}"
+            
+        res_data = r.json()
+        
+        # 兼容性解析：尝试多种可能的路径
+        # 路径1: 官方 Pro 接口标准路径
+        if 'reply' in res_data and res_data['reply']:
+            return res_data['reply']
+        
+        # 路径2: 部分兼容接口的 choices 路径
+        if 'choices' in res_data:
+            choice = res_data['choices'][0]
+            if 'message' in choice: return choice['message']['content']
+            if 'text' in choice: return choice['text']
+            
+        # 如果还是解析不到，显示原始返回（用于调试）
+        return f"🤔 **解析异常**：API 已响应但格式未知。已为您自动切换至专家预设建议：\n\n{fallback}"
+        
+    except Exception as e:
+        # 网络超时或请求失败
+        return f"📡 **网络连接超时**：已为您切换至专家预设方案。\n\n{fallback}"
 
 # --- 4. 主界面布局 ---
 st.title("🌿 小龙虾时代 · 企业 AI 进阶路径全景诊断")
