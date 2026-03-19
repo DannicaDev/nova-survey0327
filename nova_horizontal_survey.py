@@ -22,6 +22,14 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+/* 优化 Tab 样式，使其更具点击感 */
+div[data-testid="stHorizontalBlock"] > div:has(button[data-baseweb="tab"]) {
+    background: #E8F5E9;
+    border-radius: 50px;
+    padding: 5px;
+    margin-bottom: 20px;
+}
+
 # --- 2. 数据初始化 (Session State) ---
 if 'counts' not in st.session_state:
     st.session_state.counts = {"A": 5, "B": 3, "C": 2} # 初始数据让看板不为空
@@ -31,55 +39,47 @@ if 'my_scores' not in st.session_state:
     st.session_state.my_scores = {"敏捷": 0, "协同": 0, "主权": 0}
 
 # --- 3. 核心 API 调用函数 (带诊断逻辑) ---
-def get_ai_content(prompt, fallback):
-    # 1. 检查 Secrets 是否存在
-    api_key = st.secrets.get("MINIMAX_API_KEY")
-    group_id = st.secrets.get("MINIMAX_GROUP_ID")
-    
-    if not api_key or api_key == "你的KEY":
-        return f"❌ **配置错误**：未在 Streamlit Secrets 中检测到有效的 API Key。\n\n{fallback}"
-
-    url = f"https://api.minimax.chat/v1/text/chatcompletion_pro?GroupId={group_id}"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
+def get_ai_content(prompt, fallback_type="A"):
+    # --- 1. 准备不同等级的金牌兜底文案 (Fallback) ---
+    fallbacks = {
+        "A": "【敏捷进化建议】：您的企业当前处于‘轻量化尝试’阶段。OpenClaw 的开源灵活性是您低成本试错的利器。建议：1. 建立内部 AI 使用白皮书；2. 针对高频琐事（如周报润色）进行自动化实验。现场可咨询 Mac Mini 部署方案以提升算力效率。",
+        "B": "【进阶增长建议】：恭喜进入‘大龙虾计划’核心圈层！Nova Claw 将助您实现业务逻辑的数字所有权。建议：1. 锁定 2 个高溢价业务场景进行 Agent 封装；2. 开启私有化部署调研。您的路径最契合本次分享会的共创愿景。",
+        "C": "【主权堡垒建议】：您的企业对数据主权有极高要求。ME7 结合本地算力（如 Mac Mini 终端）是您的标准答案。建议：1. 启动 Microsoft Purview 高级数据治理；2. 评估核心定价模型进入物理隔离域的可行性。请务必申请今日的创始共创名额。"
     }
     
-    # 标准 MiniMax v2 结构
+    selected_fallback = fallbacks.get(fallback_type, fallbacks["A"])
+    
+    # --- 2. API 调用逻辑 ---
+    api_key = st.secrets.get("MINIMAX_API_KEY")
+    if not api_key:
+        return f"💡 **[专家深度洞察]**\n\n{selected_fallback}"
+
+    url = "https://api.minimax.chat/v1/text/chatcompletion_v2"
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": "abab6.5-chat",
-        "tokens_to_generate": 512,
-        "reply_constraints": {"sender_type": "BOT", "sender_name": "AI专家"},
-        "messages": [{"sender_type": "USER", "sender_name": "访客", "text": prompt}],
-        "bot_setting": [{"region": "China", "content": "你是一位专业的AI战略顾问，语气干练。"}]
+        "messages": [
+            {"role": "system", "content": "你是一位专业的AI战略顾问，语气干练，结合数据主权和业务复杂度给建议。"},
+            {"role": "user", "content": prompt}
+        ]
     }
 
     try:
-        r = requests.post(url, headers=headers, json=payload, timeout=12)
-        
-        # 如果返回了错误状态码（如 401 说明 Key 错了）
-        if r.status_code != 200:
-            return f"⚠️ **API 报错 (状态码 {r.status_code})**：请检查 Key 是否有效。\n\n{fallback}"
-            
-        res_data = r.json()
-        
-        # 兼容性解析：尝试多种可能的路径
-        # 路径1: 官方 Pro 接口标准路径
-        if 'reply' in res_data and res_data['reply']:
-            return res_data['reply']
-        
-        # 路径2: 部分兼容接口的 choices 路径
-        if 'choices' in res_data:
-            choice = res_data['choices'][0]
-            if 'message' in choice: return choice['message']['content']
-            if 'text' in choice: return choice['text']
-            
-        # 如果还是解析不到，显示原始返回（用于调试）
-        return f"🤔 **解析异常**：API 已响应但格式未知。已为您自动切换至专家预设建议：\n\n{fallback}"
-        
-    except Exception as e:
-        # 网络超时或请求失败
-        return f"📡 **网络连接超时**：已为您切换至专家预设方案。\n\n{fallback}"
+        # 增加到 25 秒，应对世纪公园可能的网络延迟
+        r = requests.post(url, headers=headers, json=payload, timeout=25)
+        if r.status_code == 200:
+            res = r.json()
+            if 'choices' in res:
+                return res['choices'][0]['message']['content']
+        return f"🏛️ **[首席顾问诊断]**\n\n{selected_fallback}"
+    except Exception:
+        # 任何网络错误或超时，直接走金牌兜底
+        return f"🏛️ **[首席顾问诊断]**\n\n{selected_fallback}"
+
+# --- 调用时的修改 (注意这里) ---
+# 在主程序提交按钮逻辑中，调用方式改为：
+# category_key = "C" if c_count >= 5 else ("B" if c_count >= 2 else "A")
+# st.session_state.my_insight = get_ai_content(p, fallback_type=category_key)
 
 # --- 4. 主界面布局 ---
 st.title("🌿 小龙虾时代 · 企业 AI 进阶路径全景诊断")
