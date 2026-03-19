@@ -143,6 +143,7 @@ with t_personal:
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+
         
 with t_group:
     st.header("📊 现场实时洞察看板")
@@ -192,10 +193,10 @@ with t_group:
                     st.markdown(f"""
                         <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; 
                                 border-top: 5px solid #1B5E20; color: #1B5E20;
-                                line-height: 1.6; white-space: pre-wrap; font-size: 16px;">
+                                line-height: 1.55; font-size: 15px; white-space: pre-wrap; letter-spacing: 0.5px;">
                             <div style="margin-bottom: 10px;"></div>
                             {grand_insight}
                         </div>
                     """, unsafe_allow_html=True)
-            
+
             st.info("🎁 提示：若 AI 分析生成较慢，说明正在针对全场样本进行多重逻辑建模，请稍等。")
