@@ -192,7 +192,7 @@ with tab1:
         with st.container():
             st.markdown(f'<div style="background:white; border-radius:20px; padding:20px; text-align:center; border:2px solid #28a745; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">', unsafe_allow_html=True)
             # 使用原生组件，自动适配宽度，最稳定
-            st.image(current_img, width=None) 
+            st.image(current_img, use_container_width=True)
             st.markdown(f'<h2 style="color:{current_color}; margin:10px 0 0 0;">{current_name}</h2></div>', unsafe_allow_html=True)
         
         # --- 诊断结果展现 ---
