@@ -190,12 +190,17 @@ with t_group:
 
                 with st.spinner("正在融合全场多维数据，生成深度战略白皮书..."):
                     grand_insight = get_pro_insight(gp, pro_fallback)
+                    
                     st.markdown(f"""
-                        <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; 
-                                border-top: 5px solid #1B5E20; color: #1B5E20;
-                                line-height: 1.55; font-size: 15px; white-space: pre-wrap; letter-spacing: 0.5px;">
-                            {grand_insight}
+                        <div style="background: #E8F5E9; border-left: 6px solid #4CAF50; border-radius: 10px; padding: 20px; 
+                                    max-height: 480px; overflow-y: auto; color: #1B5E20; 
+                                    box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+                            <h4 style="margin: 0 0 12px 0; color: #1B5E20; font-size: 18px;">🏛️ 首席顾问深度 Insight</h4>
+                            <div style="line-height: 1.55; font-size: 15px; white-space: pre-wrap; letter-spacing: 0.5px;">
+                                {st.session_state.saved_insight.replace('\n', '<div style="margin-bottom: 8px;"></div>')}
+                            </div>
                         </div>
                     """, unsafe_allow_html=True)
+
 
             st.info("🎁 提示：若 AI 分析生成较慢，说明正在针对全场样本进行多重逻辑建模，请稍等。")
