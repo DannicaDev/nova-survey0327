@@ -43,17 +43,6 @@ if 'saved_scores' not in st.session_state:
 
 # --- 3. 深度 AI 调用函数 ---
 def get_pro_insight(prompt, fallback):
-    
-    def generate_qr(url):
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(url)
-    qr.make(fit=True)
-    # 使用你一直用的主题绿 #1B5E20
-    img = qr.make_image(fill_color="#1B5E20", back_color="white") 
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
-    
     api_key = st.secrets.get("MINIMAX_API_KEY")
     if not api_key: return fallback
     url = "https://api.minimax.chat/v1/text/chatcompletion_v2"
@@ -71,6 +60,16 @@ def get_pro_insight(prompt, fallback):
         return r.json()['choices'][0]['message']['content']
     except:
         return fallback
+    
+    def generate_qr(url):
+        qr = qrcode.QRCode(version=1, box_size=10, border=4)
+        qr.add_data(url)
+        qr.make(fit=True)
+        # 使用你一直用的主题绿 #1B5E20
+        img = qr.make_image(fill_color="#1B5E20", back_color="white") 
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
 
 # --- 4. 主界面布局 ---
 st.title("🌿 小龙虾时代 · 企业 AI 进阶诊断")
