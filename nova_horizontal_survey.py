@@ -131,12 +131,16 @@ with t_personal:
             fig.update_layout(height=180, margin=dict(l=0,r=20,t=0,b=0), xaxis=dict(range=[0,8], visible=False), yaxis=dict(autorange="reversed"), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-        # --- 长版本专家洞见渲染 ---
+        # --- 渲染个人专家洞见（精修版排版） ---
         if st.session_state.saved_insight:
             st.markdown(f"""
-                <div class="insight-box">
-                    <strong>🏛️ 首席顾问深度 Insight：</strong><br><br>
-                    {st.session_state.saved_insight}
+                <div style="background: #E8F5E9; border-left: 6px solid #4CAF50; border-radius: 10px; padding: 20px; 
+                            max-height: 480px; overflow-y: auto; color: #1B5E20; 
+                            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+                    <h4 style="margin: 0 0 12px 0; color: #1B5E20; font-size: 18px;">🏛️ 首席顾问深度 Insight</h4>
+                    <div style="line-height: 1.55; font-size: 15px; white-space: pre-wrap; letter-spacing: 0.5px;">
+                        {st.session_state.saved_insight.replace('\n', '<div style="margin-bottom: 8px;"></div>')}
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -184,15 +188,14 @@ with t_group:
                 )
 
                 with st.spinner("正在融合全场多维数据，生成深度战略白皮书..."):
-                    # 调用 API，如果超时或失败，直接展示上面的 pro_fallback
-                    grand_insight = get_pro_insight(gp, pro_fallback)
-                    
-                    st.markdown(f"""
-                        <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; 
-                                    border-top: 5px solid #1B5E20; line-height: 1.9; 
-                                    white-space: pre-wrap; font-size: 16px; color: #1B5E20;">
-                            {grand_insight}
-                        </div>
-                    """, unsafe_allow_html=True)
+                grand_insight = get_pro_insight(gp, pro_fallback)
+                st.markdown(f"""
+                    <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; 
+                                border-top: 5px solid #1B5E20; color: #1B5E20;
+                                line-height: 1.6; white-space: pre-wrap; font-size: 16px;">
+                        <div style="margin-bottom: 10px;"></div>
+                        {grand_insight}
+                    </div>
+                """, unsafe_allow_html=True)
             
             st.info("🎁 提示：若 AI 分析生成较慢，说明正在针对全场样本进行多重逻辑建模，请稍等。")
