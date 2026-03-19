@@ -31,24 +31,32 @@ st.set_page_config(page_title="AI 进阶路径诊断", layout="wide")
 
 st.markdown("""
     <style>
-    .stApp { background-color: #F8FAF8 !important; }
-    /* 放大 Tab 标签 */
-    button[data-baseweb="tab"] { font-size: 24px !important; font-weight: 700 !important; color: #1B5E20 !important; }
-    
-    /* 结果卡片 */
-    .res-card { 
-        background: white; border-radius: 20px; padding: 30px; 
-        border: 2px solid #E0E0E0; text-align: center; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    /* 强制背景和文字颜色，不受系统深色模式干扰 */
+    [data-testid="stAppViewContainer"] {
+        background-color: #F8FAF8 !important; /* 浅绿色背景 */
     }
-    .big-icon { font-size: 100px; margin-bottom: 10px; }
-    
-    /* 专家洞见卡片：深度排版优化 */
-    .insight-box { 
-        background: linear-gradient(135deg, #F1F8E9 0%, #E8F5E9 100%); 
-        border-left: 8px solid #4CAF50; padding: 25px; 
-        border-radius: 12px; font-size: 17px; line-height: 1.8; 
-        color: #1B5E20; margin-top: 20px;
+
+    /* 强制全局文字颜色为深绿，防止变成白色 */
+    html, body, [class*="st-"] {
+        color: #1B5E20 !important; 
+    }
+
+    /* 针对输入框和卡片的特殊处理 */
+    .stTextInput input, .stSelectbox div {
+        background-color: white !important;
+        color: #1B5E20 !important;
+        border: 1px solid #C3E6CB !important;
+    }
+
+    /* 之前定义的专家洞见卡片，强制背景色 */
+    .insight-box {
+        background-color: #E8F5E9 !important;
+        color: #1B5E20 !important;
+    }
+
+    /* 针对 Tab 标签的强制颜色 */
+    button[data-baseweb="tab"] {
+        color: #1B5E20 !important;
     }
     </style>
     """, unsafe_allow_html=True)
