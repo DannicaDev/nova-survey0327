@@ -188,15 +188,25 @@ with t_group:
                     "*提示：现场抽取的 Mac Mini 不仅仅是硬件，它是您开启‘帝王蟹级’主权 AI 实验室的第一块基石。*"
                 )
 
-                with st.spinner("正在融合全场多维数据，生成深度战略白皮书..."):
+                with st.spinner("正在对全场数据进行多维建模分析..."):
                     grand_insight = get_pro_insight(gp, pro_fallback)
+                    
+                    # --- 参考个人评测区的【精修排版】渲染 ---
+                    # 关键点：line-height 设为 1.55，增加段落间距逻辑
+                    formatted_insight = grand_insight.replace('\n', '<div style="margin-bottom: 10px;"></div>')
                     
                     st.markdown(f"""
                         <div style="background: #F1F8E9; border-radius: 15px; padding: 25px; 
-                                border-top: 5px solid #1B5E20; color: #1B5E20;
-                                line-height: 1.55; font-size: 15px; white-space: pre-wrap; letter-spacing: 0.5px;">
-                            {grand_insight}
+                                    border-top: 6px solid #1B5E20; color: #1B5E20;
+                                    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+                                    margin-top: 15px;">
+                            <h4 style="margin: 0 0 15px 0; font-size: 20px; color: #1B5E20;">🔍 现场群体进化洞察报告</h4>
+                            <div style="line-height: 1.55; font-size: 16px; white-space: pre-wrap; letter-spacing: 0.3px;">
+                                {formatted_insight}
+                            </div>
                         </div>
                     """, unsafe_allow_html=True)
-
-            st.info("🎁 提示：若 AI 分析生成较慢，说明正在针对全场样本进行多重逻辑建模，请稍等。")
+            
+            # 底部 Tip 也微调一下间距
+            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+            st.info("🎁 提示：现场将随机抽取 **Mac Mini**，其本地算力正是实现‘主权级 AI’的物理基石。")
