@@ -162,6 +162,16 @@ with t_group:
         with gr:
             st.markdown("### 🏛️ 现场全景解析")
             if st.button("🛰️ 扫描现场 AI 进化趋势"):
-                gp = f"全场数据 A:{c['A']}, B:{c['B']}, C:{c['C']}。请深度分析现场趋势。"
-                st.success(get_pro_insight(gp, "现场主权意识极强，建议关注本地算力部署。"))
-            st.info("🎁 提示：现场将随机抽取 **Mac Mini**，请保持关注！")
+                # 强化版群体分析 Prompt
+                gp = (
+                    f"现场数据汇总：敏捷型(A):{c['A']}人，协同型(B):{c['B']}人，主权型(C):{c['C']}人。总计{total}位决策者。 "
+                    "请作为首席AI战略顾问，给出一段极具煽动性且深刻的现场趋势分析。要求：\n"
+                    "1. 分析当前群体表现出的‘管理焦虑’与‘技术渴望’之间的矛盾；\n"
+                    "2. 针对主权意识的觉醒（C型）给出独家见解；\n"
+                    "3. 预测未来12个月内，现场企业在 NovaClaw 这种私有化 Agent 上的潜在投入方向。\n"
+                    "排版请使用：【现状透视】、【深度逻辑】、【行动指南】三个版块。"
+                )
+                with st.spinner("正在对全场数据进行多维建模分析..."):
+                    grand_insight = get_pro_insight(gp, "全场数据表明，主权意识正在成为管理层的核心诉求。建议关注本地算力与 NovaClaw 的结合。")
+                    st.markdown(f'<div class="insight-box">{grand_insight}</div>', unsafe_allow_html=True)
+            st.info("🎁 提示：现场将随机抽取 **Mac Mini**，其本地算力正是实现‘主权级 AI’的物理基石。")
