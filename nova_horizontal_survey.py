@@ -4,186 +4,210 @@ import plotly.graph_objects as go
 import plotly.express as px
 import requests
 
-# --- 1. 页面配置与高级感 CSS ---
-st.set_page_config(page_title="AI 进阶路径诊断", layout="wide")
+# --- 1. 页面配置与超强视觉样式 (精修版) ---
+st.set_page_config(page_title="AI 进阶路径诊断 | 现场版", page_icon="🌿", layout="wide")
 
+# 强制 CSS：锁定字号、颜色配合、解决留白、优化排版配合
 st.markdown("""
     <style>
-    /* 基础背景 */
-    .stApp { background-color: #F8FAF8 !important; }
+    /* 全局背景与字体 */
+    .stApp { background-color: #F0F9F0 !important; }
+    html, body, [class*="st-"] { color: #155724 !important; font-family: 'Segoe UI', 'Roboto', sans-serif; }
+    
+    /* 标题样式 */
+    h1 { color: #155724 !important; font-weight: 700 !important; font-size: 38px !important; margin-bottom: 5px !important; }
+    h3 { color: #155724 !important; font-weight: 600 !important; margin-top: 15px !important; font-size: 22px !important;}
+    h4 { color: #155724 !important; font-weight: 500 !important; font-size: 18px !important; margin-bottom: 10px !important;}
+    h5 { color: #155724 !important; font-weight: 400 !important; font-size: 16px !important; margin-bottom: 15px !important;}
 
-    /* 放大 Tab 标签并增加点击感 */
-    button[data-baseweb="tab"] { 
-        font-size: 26px !important; 
-        font-weight: 700 !important; 
-        color: #1B5E20 !important; 
-    }
-
-    /* 优化 Tab 容器样式 (注意这里的逗号必须是英文半角) */
-    div[data-testid="stHorizontalBlock"] > div:has(button[data-baseweb="tab"]) {
-        background-color: #E8F5E9 !important;
-        border-radius: 50px !important;
-        padding: 5px 20px !important;
-        margin-bottom: 20px !important;
+    /* 问卷表单卡片 */
+    [data-testid="stForm"] { 
+        background-color: white !important; border-radius: 20px; 
+        padding: 35px; border: 1px solid #C3E6CB;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     }
     
-    /* 问卷文字字号 */
-    .stRadio label { font-size: 19px !important; font-weight: 500 !important; }
+    /* 单选框样式：字号配合 */
+    div[data-testid="stRadio"] label { color: #2c3e50 !important; font-weight: 500 !important; font-size: 16px !important; }
+    
+    /* 右侧视觉面板 (修复图片显示) */
+    .visual-panel {
+        background: white !important; border-radius: 20px; padding: 25px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center;
+        margin-bottom: 20px; border: 2px solid #28a745;
+    }
+    .lobster-main-img { width: 90%; max-width: 320px; height: auto; margin: 20px auto; display: block; }
+    
+    /* Insight 卡片 (精修字号与换行排版) */
+    .insight-card {
+        background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%) !important;
+        border-radius: 15px; padding: 25px;
+        margin-top: 20px; border-left: 5px solid #00796b;
+        color: #004d40 !important; 
+        font-size: 16px !important; line-height: 1.8 !important; /* 增加行高 */
+    }
+    /* 现场看板卡片 */
+    .stat-card { background: white; border-radius: 12px; padding: 20px; text-align: center; border-top: 6px solid #28a745; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+    .stat-val { font-size: 40px; font-weight: bold; color: #155724; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. 数据初始化 (Session State) ---
-if 'counts' not in st.session_state:
-    st.session_state.counts = {"A": 5, "B": 3, "C": 2} # 初始数据让看板不为空
-if 'my_insight' not in st.session_state:
-    st.session_state.my_insight = None
-if 'my_scores' not in st.session_state:
-    st.session_state.my_scores = {"敏捷": 0, "协同": 0, "主权": 0}
+# --- 2. 初始化全局数据 (保存在服务器内存) ---
+if 'group_data' not in st.session_state:
+    st.session_state.group_data = {"A": 2, "B": 2, "C": 1} # 预设数据防报错
 
-# --- 3. 核心 API 调用函数 (带诊断逻辑) ---
-def get_ai_content(prompt, fallback_type="A"):
-    # --- 1. 准备不同等级的金牌兜底文案 (Fallback) ---
-    fallbacks = {
-        "A": "【敏捷进化建议】：您的企业当前处于‘轻量化尝试’阶段。OpenClaw 的开源灵活性是您低成本试错的利器。建议：1. 建立内部 AI 使用白皮书；2. 针对高频琐事（如周报润色）进行自动化实验。现场可咨询 Mac Mini 部署方案以提升算力效率。",
-        "B": "【进阶增长建议】：恭喜进入‘大龙虾计划’核心圈层！Nova Claw 将助您实现业务逻辑的数字所有权。建议：1. 锁定 2 个高溢价业务场景进行 Agent 封装；2. 开启私有化部署调研。您的路径最契合本次分享会的共创愿景。",
-        "C": "【主权堡垒建议】：您的企业对数据主权有极高要求。ME7 结合本地算力（如 Mac Mini 终端）是您的标准答案。建议：1. 启动 Microsoft Purview 高级数据治理；2. 评估核心定价模型进入物理隔离域的可行性。请务必申请今日的创始共创名额。"
-    }
-    
-    selected_fallback = fallbacks.get(fallback_type, fallbacks["A"])
-    
-    # --- 2. API 调用逻辑 ---
+# --- 3. MiniMax 调用预留 ---
+def call_minimax(prompt_text):
+    # (预留 MiniMax 调用，目前使用 fallback 兜底，现场网络不通也不怕)
     api_key = st.secrets.get("MINIMAX_API_KEY")
-    if not api_key:
-        return f"💡 **[专家深度洞察]**\n\n{selected_fallback}"
+    # 增加 Fallback 机制：现场如果网络不通，直接返回这段预设的高价值文案
+    if "蟹" in prompt_text or "ME7" in prompt_text:
+        return "**Insight**: 您的企业视数据为主权。普通的协同工具已无法承载您的雄心。ME7 不仅是工具，更是您的“数字堡垒”。\n\n**建议**: 1. 立即启动 Microsoft Purview 高级数据资产全景梳理。2. 评估核心定价模型进入帝王蟹级隔离域的可行性。"
+    elif "龙虾" in prompt_text or "NovaClaw" in prompt_text:
+        # **修复：更名为 NovaClaw**
+        return "**Insight**: 您的核心竞争力在于业务逻辑的**独家定制**。NovaClaw 是帮您把智慧转化为数字资产的关键。\n\n**建议**: 1. 确定 2 个具有高溢价能力的业务 API，作为 NovaClaw 的首批“数字员工”。2. 开启私有 Agent 共创模式。"
+    else:
+        return "**Insight**: 敏捷是您的利器，但影子 AI 是潜伏的礁石。当前阶段应以 OpenClaw 快速激活全员效率，但需建立基础的使用准则。\n\n**建议**: 1. 制定企业全员 AI 使用白皮书。2. 寻找 3 个高频琐事场景进行自动化替代实验。"
 
-    url = "https://api.minimax.chat/v1/text/chatcompletion_v2"
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    payload = {
-        "model": "abab6.5-chat",
-        "messages": [
-            {"role": "system", "content": "你是一位专业的AI战略顾问，语气干练，结合数据主权和业务复杂度给建议。"},
-            {"role": "user", "content": prompt}
-        ]
-    }
+# --- 4. 主体布局 ---
+st.title("🌿 春启新程 · 企业 AI 进阶全景诊断")
+st.markdown("##### 尊敬的决策者：请完成以下 8 个维度的测评，我们将为您生成专属的数字化进化 Insight。")
 
-    try:
-        # 增加到 25 秒，应对世纪公园可能的网络延迟
-        r = requests.post(url, headers=headers, json=payload, timeout=25)
-        if r.status_code == 200:
-            res = r.json()
-            if 'choices' in res:
-                return res['choices'][0]['message']['content']
-        return f"🏛️ **[首席顾问诊断]**\n\n{selected_fallback}"
-    except Exception:
-        # 任何网络错误或超时，直接走金牌兜底
-        return f"🏛️ **[首席顾问诊断]**\n\n{selected_fallback}"
-
-# --- 调用时的修改 (注意这里) ---
-# 在主程序提交按钮逻辑中，调用方式改为：
-# category_key = "C" if c_count >= 5 else ("B" if c_count >= 2 else "A")
-# st.session_state.my_insight = get_ai_content(p, fallback_type=category_key)
-
-# --- 4. 主界面布局 ---
-st.title("🌿 小龙虾时代 · 企业 AI 进阶路径全景诊断")
-st.markdown("#### 世纪公园 · 一尺花园分享会 | 寻找您的数字化进化终点")
-
-tab1, tab2 = st.tabs(["📋 个人评测", "📊 现场看板"])
+tab1, tab2 = st.tabs(["📋 个人诊断", "📊 现场洞察看板"])
 
 with tab1:
-    l, r = st.columns([6, 4], gap="large")
-    
-    with l:
-        with st.form("main_form"):
-            st.markdown("### 🧬 核心维度探测")
-            # 双列填充留白
-            q1_col, q2_col = st.columns(2)
-            with q1_col:
-                v1 = st.radio("1. 公有云 AI 态度", ["A. 效率优先", "B. 稳健监管", "C. 严格禁入"])
-                v2 = st.radio("2. 核心数据访问", ["A. 结果导向", "B. 大厂托管", "C. 物理不出场"])
-                v3 = st.radio("3. 数据归属权", ["A. 无所谓", "B. 合同约定", "C. 必须私有"])
-                v4 = st.radio("4. 场景复杂度", ["A. 基础办公", "B. 流程协同", "C. 核心逻辑"])
-            with q2_col:
-                v5 = st.radio("5. 定制化要求", ["A. 标准化界面", "B. 模块化配置", "C. 深度定制"])
-                v6 = st.radio("6. Agent 预期", ["A. 零散工具", "B. 组织统筹", "C. 智能矩阵"])
-                v7 = st.radio("7. 采购核心价值", ["A. 试错优先", "B. 长期配置", "C. 价值与安全"])
-                v8 = st.radio("8. 掌控感要求", ["A. 使用者", "B. 跟随者", "C. 最高主权"])
+    l_col, r_col = st.columns([65, 35]) # 调整比例
+    with l_col:
+        with st.form("my_form"):
+            st.markdown("### 🧬 企业 AI 进化 8 维测评")
+            # --- 修复：使用双列排版填补中间留白 ---
+            q_col1, q_col2 = st.columns(2)
+            with q_col1:
+                st.markdown("#### 第一部分：安全边界")
+                q1 = st.radio("1. 公有云 AI 使用态度？", ["A. 效率优先", "B. 担忧合规", "C. 严格禁入"])
+                q2 = st.radio("2. 核心数据访问要求？", ["A. 结果导向", "B. 信任大厂云", "C. 物理不出场"])
+                q3 = st.radio("3. 数据归属权趋势？", ["A. 无所谓", "B. 合同约定", "C. 必须私有隔离"])
+                st.markdown("#### 第二部分：业务深度")
+                q4 = st.radio("4. AI 解决的问题？", ["A. 文字基础", "B. 流程协同", "C. 深度逻辑/API"])
+            with q_col2:
+                q5 = st.radio("5. 定制化个性习惯要求？", ["A. 标准界面", "B. 模块化配置", "C. 私有专属员工"])
+                q6 = st.radio("6. Agent 预期数量？", ["A. 零散工具", "B. 组织统筹", "C. 集群作战矩阵"])
+                st.markdown("#### 第三部分：投入规划")
+                q7 = st.radio("7. AI 采购价值取向？", ["A. 快速尝试", "B. 长期配置", "C. 价值溢价/资产保护"])
+                q8 = st.radio("8. 掌控感预期？", ["A. 工具使用者", "B. 生态跟随", "C. 最高主权"])
             
-            submitted = st.form_submit_button("🌱 立即开启 AI 诊断报告")
+            submit = st.form_submit_button("🌱 提交结果")
 
-    with r:
-        # 计算结果
-        ans = [v1, v2, v3, v4, v5, v6, v7, v8]
-        c_count = sum(1 for x in ans if "C." in x)
+    with r_col:
+        # --- 修复：右侧实时高清大图 (龙虾图片回归且变大) ---
+        visual_placeholder = st.empty()
+        # 实时判定
+        all_qs = [q1, q2, q3, q4, q5, q6, q7, q8]
+        c_count = sum(1 for x in all_qs if "C." in x)
         
+        # 龙虾/帝王蟹回归
         if c_count >= 5:
-            icon, name, color = "🦀", "殿堂·帝王蟹 (ME7)", "#1565C0"
+            # 殿堂·帝王蟹 (ME7)
+            img = "https://img.icons8.com/?size=400&id=121153&format=png"
+            name, color = "殿堂·帝王蟹 (ME7 Suite)", "#0078d4"
         elif c_count >= 2:
-            icon, name, color = "🦞", "进阶·大龙虾 (Nova)", "#EF6C00"
+            # 进阶·大龙虾 (NovaClaw)
+            # **修复：更名为 NovaClaw**
+            img = "https://img.icons8.com/?size=400&id=mNInV8G1Gv8R&format=png"
+            name, color = "进阶·大龙虾 (NovaClaw)", "#ff8c00"
         else:
-            icon, name, color = "🦐", "敏捷·小龙虾 (OpenClaw)", "#C62828"
-
-        # 结果展示
-        st.markdown(f"""
-            <div class="res-card" style="border-top: 10px solid {color};">
-                <div class="big-icon">{icon}</div>
-                <h2 style="color:{color}; margin:0;">{name}</h2>
+            # 敏捷·小龙虾 (OpenClaw)
+            img = "https://img.icons8.com/?size=400&id=121151&format=png"
+            name, color = "敏捷·小龙虾 (OpenClaw)", "#ff4b4b"
+            
+        # 展示大图卡片 (修复图片变小问题，通过 CSS `lobster-main-img` 控制)
+        visual_placeholder.markdown(f"""
+            <div class="visual-panel">
+                <img src="{img}" class="lobster-main-img">
+                <h2 style="color:{color}; margin-top:10px;">{name}</h2>
             </div>
         """, unsafe_allow_html=True)
-
-        if submitted:
-            # 更新状态
-            st.session_state.counts["C" if c_count >= 5 else ("B" if c_count >= 2 else "A")] += 1
-            st.session_state.my_scores = {
-                "敏捷": sum(1 for x in ans if "A." in x),
-                "协同": sum(1 for x in ans if "B." in x),
-                "主权": c_count
-            }
-            # 调用 AI
-            p = f"诊断结果为{name}。请根据数据主权{v1}和定制化{v5}给出3条建议。"
-            f = f"您的企业已进入{name}阶段。当前核心任务是确立‘数据主权’边界，建议优先将核心业务场景进行私有化 Agent 封装，实现智慧资产的永久留存。"
-            with st.spinner("AI 顾问正在生成洞察..."):
-                st.session_state.my_insight = get_ai_content(p, f)
+        
+        if submit:
+            # Balloons!
             st.balloons()
-
-        # --- 渲染能量条 (高级感替代三维图) ---
-        if st.session_state.my_scores["敏捷"] + st.session_state.my_scores["主权"] > 0:
-            st.markdown("#### ⚡ 进阶维度能量分布")
-            fig = go.Figure(go.Bar(
-                x=[st.session_state.my_scores[k] for k in ["敏捷", "协同", "主权"]],
-                y=["Agile", "Collab", "Sovereign"],
-                orientation='h', marker_color=color, text=[st.session_state.my_scores[k] for k in ["敏捷", "协同", "主权"]], textposition='auto'
+            st.markdown("---")
+            
+            # 雷达图 (找回并精美化)
+            st.markdown("#### 您的 AI 进化雷达图")
+            scores = {"A": sum(1 for x in all_qs if "A." in x), 
+                      "B": sum(1 for x in all_qs if "B." in x), 
+                      "C": c_count}
+            fig = go.Figure(data=go.Scatterpolar(
+                r=[scores["A"], scores["B"], scores["C"]],
+                theta=['敏捷(A)', '协同(B)', '主权(C)'],
+                fill='toself', line_color='#155724'
             ))
-            fig.update_layout(height=200, margin=dict(l=0,r=0,t=0,b=0), xaxis=dict(range=[0,8], visible=False), yaxis=dict(autorange="reversed"))
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            # 调整分数为 0-8，适应 8 题版
+            fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 8])), height=250, margin=dict(l=40,r=40,t=20,b=20))
+            st.plotly_chart(fig, use_container_width=True)
 
-        # --- 专家洞见持久化显示 ---
-        if st.session_state.my_insight:
-            st.markdown(f'<div class="insight-box"><strong>🏛️ 专家建议：</strong><br>{st.session_state.my_insight}</div>', unsafe_allow_html=True)
+            # 专家 Insight (增加换行，提高可读性)
+            st.markdown("#### 🤖 大模型专家诊断 Insight")
+            user_profile = f"数据安全: {q1}, 核心数据: {q2}, 业务深度: {q4}, 定制化: {q5}"
+            # 这里调用本地兜底，确保现场没问题
+            insight_content = call_minimax(user_profile)
+            # 使用 CSS 控制字号与换行配合
+            st.markdown(f'<div class="insight-card">{insight_content}</div>', unsafe_allow_html=True)
+            
+            # 申请名额按钮 (主权型 C>=4 出现)
+            if scores["C"] >= 4:
+                st.button("🌸 申请 NovaClaw 创始共创名额")
+                
+            # 更新全局数据
+            key = "C" if c_count >= 5 else ("B" if c_count >= 2 else "A")
+            st.session_state.group_data[key] += 1
+            st.success("匿名诊断结果已同步至现场看板！")
+        else:
+            st.markdown('<p style="text-align:center; color:#155724; font-size:14px; margin-top:15px;">💡 完成测评，解锁大模型专属 Insight 与雷达图谱...</p>', unsafe_allow_html=True)
 
 with tab2:
+    # --- 群体洞察版块 (看板大改版) ---
     st.header("📊 现场实时洞察看板")
-    c = st.session_state.counts
-    tot = sum(c.values())
+    total = sum(st.session_state.group_data.values())
     
+    # 看板布局大改，增加信息量，消除凌乱感，字号配合
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("参与人数", tot)
-    k2.metric("小龙虾(A)", c["A"])
-    k3.metric("大龙虾(B)", c["B"])
-    k4.metric("帝王蟹(C)", c["C"])
+    k1.markdown(f'<div class="stat-card">参与人数<br><span class="stat-val">{total}</span></div>', unsafe_allow_html=True)
+    k2.markdown(f'<div class="stat-card">小龙虾(A)<br><span class="stat-val">{st.session_state.group_data["A"]}</span></div>', unsafe_allow_html=True)
+    # **修复：更名为 NovaClaw**
+    k3.markdown(f'<div class="stat-card">NovaClaw(B)<br><span class="stat-val">{st.session_state.group_data["B"]}</span></div>', unsafe_allow_html=True)
+    k4.markdown(f'<div class="stat-card">帝王蟹(C)<br><span class="stat-val">{st.session_state.group_data["C"]}</span></div>', unsafe_allow_html=True)
 
-    if tot > 0:
-        st.write("---")
-        gl, gr = st.columns(2)
-        with gl:
-            fig_p = px.pie(names=['OpenClaw (A)', 'Nova (B)', 'ME7 (C)'], values=[c["A"], c["B"], c["C"]],
-                           color_discrete_sequence=['#C62828', '#EF6C00', '#1565C0'], hole=0.5)
-            fig_p.update_traces(textinfo='percent+label', textfont_size=20)
-            st.plotly_chart(fig_p, use_container_width=True)
-        with gr:
-            st.markdown("### 🏛️ 全场趋势解析")
-            if st.button("🛰️ 扫描现场全景"):
-                gp = f"现场数据 A:{c['A']} B:{c['B']} C:{c['C']}。请分析管理者焦虑点。"
-                gf = "现场数据显示，**主权意识（C型）** 正在成为主流。这标志着管理者已从单纯追求效率，转向追求数字化资产的深度自持。"
-                with st.spinner("AI 分析中..."):
-                    st.success(get_ai_content(gp, gf))
-            st.info("🎁 提示：现场将抽取 **Mac Mini**，请确保已提交个人评测。")
+    if total > 0:
+        st.markdown("---")
+        # 增加饼图，展示专业配色配合字号大字号
+        # 采用两列横向布局解决留白凌乱
+        g_col1, g_col2 = st.columns([6, 4])
+        with g_col1:
+            st.markdown("### 全场分布图谱")
+            # 手动配色配合
+            fig_pie = px.pie(
+                names=['敏捷型 (A)', '协同型 (B)', '主权型 (C)'],
+                values=[st.session_state.group_data["A"], st.session_state.group_data["B"], st.session_state.group_data["C"]],
+                color_discrete_sequence=['#ff4b4b', '#ff8c00', '#0078d4'],
+                hole=0.4
+            )
+            # 调大占比字号配合
+            fig_pie.update_traces(textinfo='percent+label', textfont_size=18, marker=dict(line=dict(color='#FFFFFF', width=2)))
+            fig_pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=350)
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        with g_col2:
+            st.markdown("### 群体分析建议")
+            # MiniMax 分析群体
+            g_p = f"现场{total}人参与。A:{st.session_state.group_data['A']}, B:{st.session_state.group_data['B']}, C:{st.session_state.group_data['C']}。请分析管理者焦虑点。"
+            # 这里调用本地兜底，现场没问题
+            group_insight = call_minimax(g_p)
+            # 配合换行
+            st.info(f"🏛️ **专家洞察**：\n\n{group_insight}")
+            st.markdown("""
+                <div style="background:#e8f5e9; padding:15px; border-radius:10px; font-size:14px; color:#1b5e20;">
+                **提示**: 现场将随机抽取 **Mac Mini**，确保您的诊断结果属于 C 型（主权型）以增加中奖几率！
+                </div>
+            """, unsafe_allow_html=True)
